@@ -1,13 +1,17 @@
-import datetime
+from datetime import *
 from tkinter import *
 from tkinter.ttk import Notebook, Frame, Combobox
-from parse import runParse
+from module_functions import *
+from module_structures import *
+from module_parse import *
 
-def getTimeNow():
-    d1 = datetime.datetime.utcnow()
-    d2 = datetime.datetime.now()
-    td = d1 - d2
-    return (d1.strftime("%d/%m/%Y"))
+import matplotlib
+import matplotlib.pyplot as plt
+import math 
+import pylab
+
+
+
 
 # Класс, реализующий управление вкладками и их создание.
 class TabsControl:    
@@ -29,35 +33,93 @@ class TabsControl:
     # Метод, для переключения размера окна при переключении между вкладками
     def changeResol(self, event):
             if self.root_geom == "700x175":
-                self.root_geom = "1000x750"
+                self.root_geom = "1100x600"
                 self.root.geometry(self.root_geom)
             else:
                 self.root_geom = "700x175"
                 self.root.geometry(self.root_geom)
-    
-# class button_convert:
-#         def __init__ (self, tab, arg_text, arg_command):
-#           self.body = Button(tab, text=arg_text, command=arg_command)
-#         def runConvert(label)
 
-    
+class SelectedCombobox():
+    def checkRadioButton(self):
+        value = lang.get()
+        self.period_name = setvalues(value)
+        combobox4["values"] = findboxvalues(setvalues(value))
+        combobox4.set('')
+        combobox4.current(0)
+        combobox4.grid(row = lang.get(), column = 3)
+        num = combobox4.current() + 1
+        self.period = getPeriod(self.period_name, num)
+        self.dates_list = finddates(self.period[0], self.period[1])
+    def setdates(self, event):
+        num = combobox4.current() + 1
+        self.period = getPeriod(self.period_name, num)
+        self.dates_list = finddates(self.period[0], self.period[1])
+    def getdates(self):
+        return self.dates_list
+
+ 
+
+
+
+def getTimeNow():
+    d1 = datetime.utcnow()
+    return (d1.strftime("%d/%m/%Y"))
 def runConvert():
-    was_val = combobox1.get()
-    be_val = combobox2.get()
+    el_was =  all_valutegroup_today[combobox1.current()]
+    el_be =  all_valutegroup_today[combobox2.current()]
+    was_val = el_was.price
+    be_val = el_be.price
     money = entry1.get()
-    for el in list_valute_now:
-        if el[0] == was_val:
-            was_val = el[1]
-            was_val_count = el[2]
-        if el[0] == be_val:
-            be_val = el[1]
-            be_val_count = el[2]
-    print(was_val, be_val, money, was_val_count, be_val_count)
+    was_val_count = el_was.count
+    be_val_count = el_be.count
     result_convert = float(money)*float(was_val)*float(be_val_count)/(float(be_val)*float(was_val_count))
-    print(result_convert)
     label1.config(text=result_convert)
 
 
+def setSchedule(labels, y_list):
+    # настройка значений графика    
+    xlist = []
+    d = 1
+    for i in range(len(y_list)):
+        xlist.append(d)
+        d+=1
+    plt.xlim(xlist[0], xlist[-1])
+    plt.autoscale(True, 'y')
+    plt.plot(xlist, y_list, 'g')
+    plt.xticks(xlist, labels)
+    canvas.draw()
+    
+
+# Функция-контроллер для запуска парсера и постройки графика
+def runSchedule():
+    plt.gcf().clear()
+    plt.grid()
+    name = combobox3.get()    
+    dates_list = selectedcmb.getdates()
+    value_list = []
+    labels = dates_list
+    if (selectedcmb.period_name != 'quarts' and selectedcmb.period_name != "years"):
+        for i in range(len(dates_list)):            
+            el = float(runParse(dates_list[i], False, name).price)
+            value_list.append(el)
+    if (selectedcmb.period_name == 'quarts'):
+        for i in range(len(dates_list)):
+            if (dates_list[i][:2] == '01' or dates_list[i][:2] == '15'):
+                el = runParse(dates_list[i], False, name).price
+                value_list.append(el)
+        last_el = runParse(dates_list[len(dates_list) - 1] , False, name).price
+        value_list.append(last_el)
+    if (selectedcmb.period_name == 'years'):
+        for i in range(len(dates_list)):
+            if (dates_list[i][:2] == '01' or dates_list[i][:2] == '15'):
+                el = runParse(dates_list[i], False, name).price
+                value_list.append(el)
+        last_el = runParse(dates_list[len(dates_list) - 1] , False, name).price
+    labels = shorttitle(selectedcmb.period_name, labels)
+    setSchedule(labels, value_list)
+    
+    
+    
 
 
 root = Tk()
@@ -68,14 +130,17 @@ tabscontrol = TabsControl(root, ["Калькулятор валют", "Дина�
 tab1 = tabscontrol[0]
 tab2 = tabscontrol[1]
 
-list_valute_now = runParse(getTimeNow())
+all_valutegroup_today = runParse(getTimeNow(), TRUE)
+# list_valute_now = runParse(getTimeNow())
 list_valute_names = ()
+
+for el in all_valutegroup_today:
+    p = str(el.name)
+    list_valute_names = list_valute_names+ (p,)
 
 # Все элементы первой вкладки
 combobox1 = Combobox(tab1, width="25")
-for el in list_valute_now:
-    a = str(el[0])
-    list_valute_names = list_valute_names + (a, )
+
 
 combobox1["values"] = list_valute_names
 combobox1.grid(row = 2, column = 2, rowspan = 2, pady = 20, padx = 15)
@@ -99,20 +164,38 @@ label3.grid(row = 1, column = 2, pady = 3, padx = 40)
 label4 = Label(tab2, text="Выбор периода", fg = "black")
 label4.grid(row = 1, column = 3, pady = 3, padx = 30)
 combobox3 = Combobox(tab2, width="25")
+combobox3["values"] = list_valute_names
 combobox3.grid(row = 2, column = 1, pady = 3, padx = 10)
-radiobutton1 = Radiobutton(tab2, text = "Неделя", value = 1, width = 20)
-radiobutton1.grid(row = 2, column = 2, pady = 3)
-radiobutton2 = Radiobutton(tab2, text = "Месяц", value = 2, width = 20)
-radiobutton2.grid(row = 3, column = 2, pady = 3, columnspan=1)
-radiobutton3 = Radiobutton(tab2, text = "Квартал", value = 3, width = 20)
-radiobutton3.grid(row = 4, column = 2, pady = 3)
-radiobutton4 = Radiobutton(tab2, text = "Год", value = 4, width = 20)
-radiobutton4.grid(row = 5, column = 2, pady = 3, )
+
+lang = IntVar()
+value_list = []
+
+selectedcmb = SelectedCombobox()
 combobox4 = Combobox(tab2, width="25")
-combobox4.grid(row = 5, column = 3, rowspan = 2, pady = 3)
-btn2 = Button(tab2, text="Построить график", width=23)
+radiobutton1 = Radiobutton(tab2, text = "Неделя", value = 2, width = 20, variable=lang, command=selectedcmb.checkRadioButton)
+# Эмитация нажатия(дефолтное значение, при выборе вкладки)
+radiobutton1.invoke()
+radiobutton1.grid(row = 2, column = 2, pady = 3)
+radiobutton2 = Radiobutton(tab2, text = "Месяц", value = 3, width = 20, variable=lang, command=selectedcmb.checkRadioButton)
+radiobutton2.grid(row = 3, column = 2, pady = 3, columnspan=1)
+radiobutton3 = Radiobutton(tab2, text = "Квартал", value = 4, width = 20, variable=lang, command=selectedcmb.checkRadioButton)
+radiobutton3.grid(row = 4, column = 2, pady = 3)
+radiobutton4 = Radiobutton(tab2, text = "Год", value = 5, width = 20, variable=lang, command=selectedcmb.checkRadioButton)
+radiobutton4.grid(row = 5, column = 2, pady = 3)
+
+
+btn2 = Button(tab2, text="Построить график", width=23, command=runSchedule)
 btn2.grid(row = 5, column = 1,  padx = 10)
+# создание графика
+# установка расположения графика на вкладке
+matplotlib.use('TkAgg')
+
+fig, ax = plt.subplots(1, 1, figsize=(5.5, 4.1))
+canvas = matplotlib.backends.backend_tkagg.FigureCanvasTkAgg(fig, master=tab2)
+plot_widget = canvas.get_tk_widget()
+plot_widget.grid(row=7, column=4)
 
     
 tabscontrol.body.bind("<<NotebookTabChanged>>", tabscontrol.changeResol)
+combobox4.bind("<<ComboboxSelected>>", selectedcmb.setdates)
 root.mainloop()
