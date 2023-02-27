@@ -7,9 +7,6 @@ from module_parse import *
 
 import matplotlib
 import matplotlib.pyplot as plt
-import math 
-import pylab
-
 
 
 
@@ -94,7 +91,7 @@ def setSchedule(labels, y_list):
 def runSchedule():
     plt.gcf().clear()
     plt.grid()
-    name = combobox3.get()    
+    name = combobox3.get()
     dates_list = selectedcmb.getdates()
     value_list = []
     labels = dates_list
@@ -110,6 +107,7 @@ def runSchedule():
         last_el = runParse(dates_list[len(dates_list) - 1] , False, name).price
         value_list.append(last_el)
     if (selectedcmb.period_name == 'years'):
+        print(dates_list)
         for i in range(len(dates_list)):
             if (dates_list[i][:2] == '01' or dates_list[i][:2] == '15'):
                 el = runParse(dates_list[i], False, name).price
