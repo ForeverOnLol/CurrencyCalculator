@@ -3,13 +3,10 @@ import sqlite3
 import urllib.request
 import xml.dom.minidom
 
-from datequarter import DateQuarter
-from dateutil.relativedelta import relativedelta
-from datetime import datetime
-import datetime
+from common.required_date import RequiredDate
 
 
-class Database():
+class Database:
     pass
 
 
@@ -29,13 +26,13 @@ class SQLiteDB(Database):
     def __is_exist(self):
         return os.path.isfile(self.file_path)
 
-    def __create_dir(self):
+    def __create_dir(self) -> None:
         os.mkdir(self.dir_path)
 
-    def __create_file(self):
+    def __create_file(self) -> None:
         os.mknod(self.file_path)
 
-    def __build_structure(self):
+    def __build_structure(self) -> None:
         with open('create_sqlite.sql', 'r') as sql_file:
             sql_script = sql_file.read()
 
@@ -45,7 +42,7 @@ class SQLiteDB(Database):
         connection.commit()
         cursor.close()
 
-    def run(self):
+    def run(self) -> None:
         if not self.__is_exist():
             self.__create_dir()
             self.__create_file()
@@ -53,120 +50,58 @@ class SQLiteDB(Database):
         SQLiteDB.connection = sqlite3.connect(self.file_path)
 
 
-class RequiredDate:
-    '''
-    Создаём необходимые даты:
-    1) Все дни последних четырёх недель,
-    2) Все дни последних четырёх месяцев,
-    4) 1 и 15 день каждого месяца последних четырёх лет.
-    :return: None
-    '''
-
-    @staticmethod
-    def __count(start_dt: datetime.date, end_dt: datetime.date) -> list[datetime.date]:
-        '''
-        Создание списка с датами от start_dt до end_dt
-        :param start_dt: стартовая дата
-        :param end_dt: конечная дата
-        :return: список с датами
-        '''
-        result = []
-        while (start_dt <= end_dt):
-            result.append(start_dt)
-            start_dt += datetime.timedelta(days=1)
-        return result
-
-    @staticmethod
-    def __start_mid_format(dates_list: list[datetime.date]) -> list[datetime.date]:
-        '''
-        Форматирование списка, исключающее все даты, кроме 01 и 15 дня месяца.
-        :param dates_list: Список с датами
-        :return: список с датами
-        '''
-        dates_list_fixed = []
-        for date in dates_list:
-            if (date.day == 1) or (date.day == 15):
-                dates_list_fixed.append(date)
-        return dates_list_fixed
-
-    @classmethod
-    def last_weeks(cls) -> list[datetime.date]:
-        '''
-        Все дни последних четырёх недель.
-        :return: Список с датами
-        '''
-        today = datetime.datetime.now().date()
-        start_date = today - relativedelta(days=today.weekday(), weeks=3)
-        return cls.__count(start_dt=start_date, end_dt=today)
-
-    @classmethod
-    def last_months(cls) -> list[datetime.date]:
-        '''
-        Все дни последних четырёх месяцев.
-        :return: Список с датами
-        '''
-        today = datetime.datetime.now().date()
-        start_date = today - relativedelta(days=today.day - 1, months=3)
-        return cls.__count(start_dt=start_date, end_dt=today)
-
-    @classmethod
-    def last_quarts(cls) -> list[datetime.date]:
-        '''
-        1 и 15 день каждого месяца последних четырёх кварталов.
-        :return: Список с датами
-        '''
-        today = datetime.datetime.now().date()
-        start_quart = DateQuarter.from_date(today.replace(day=1)) - 3
-        start_date = start_quart.start_date()
-
-        dates_list = cls.__count(start_dt=start_date, end_dt=today)
-        return cls.__start_mid_format(dates_list)
-
-    @classmethod
-    def last_years(cls) -> list[datetime.date]:
-        '''
-        1 и 15 день каждого месяца последних четырёх лет.
-        :return: Список с датами
-        '''
-        today = datetime.datetime.now().date()
-        start_date = today.replace(day=1, month=1) - relativedelta(years=3)
-
-        dates_list = cls.__count(start_dt=start_date, end_dt=today)
-        return cls.__start_mid_format(dates_list)
-
-    @classmethod
-    def all(cls) -> list[str]:
-        '''
-        Возвращает список строк в формате %Y/%m/%d с необходимыми датами.
-        :return: список с датами
-        '''
-        result = []
-        for date in cls.last_weeks() + cls.last_months() + cls.last_quarts() + cls.last_years():
-            date = date.strftime('%d/%m/%Y')
-            if date not in result:
-                result.append(date)
-        return result
-
-
 class ValuteManager:
-    @staticmethod
-    def load_data_in_db():
+    '''
+    Управляет валютами и данными о них.
+    '''
+
+    @classmethod
+    def load_data_in_db(cls) -> None:
         '''
         Подгрузка данных в БД при каждом запуске приложения.
         :return: None
         '''
-        date_list = RequiredDate.all()
+
         valute_list = sorted(Valute.all())
 
         if not len(valute_list):
-            for date in date_list:
-                valute_by_day_list = CbrScrapper(date=date).get()
+            cls.load_all()
+        else:
+            cls.load_fresh()
 
+    @classmethod
+    def load_all(cls) -> None:
+        '''
+        Подгрузить все данные из ЦБ в БД.
+        :return:
+        '''
+        date_list = RequiredDate.all()
+        for date in date_list:
+            valute_by_day_list = CbrScrapper(date=date).get()
+            for valute in valute_by_day_list:
+                valute.entity.create()
+                valute.data.create()
+
+    @classmethod
+    def load_fresh(cls) -> None:
+        '''
+        Подгрузка новых данных из ЦБ в БД.
+        :return:
+        '''
+        existing_dates = frozenset(ValutePrice.existing_dates())
+        date_list = frozenset(RequiredDate.all())
+        mismatched = date_list - existing_dates
+
+        if mismatched:
+            for date in mismatched:
+                valute_by_day_list = CbrScrapper(date=date).get()
                 for valute in valute_by_day_list:
                     valute.entity.create()
                     valute.data.create()
-        else:
-            pass
+
+    @classmethod
+    def get_by_period(cls, period):
+        pass
 
 
 class Valute:
@@ -228,6 +163,10 @@ class Valute:
 
 
 class ValutePrice:
+    '''
+    Стоимость валюты за определённую дату
+    '''
+
     def __init__(self, value, date, valute_id):
         self.value = float(value)
         self.date = str(date)
@@ -241,10 +180,13 @@ class ValutePrice:
                   VALUES(?, ?, ?) '''
         db = SQLiteDB.connection
         cursor = db.cursor()
-
-        cursor.execute(sql, [self.value, self.date, self.valute_id])
-        db.commit()
-        cursor.close()
+        try:
+            cursor.execute(sql, [self.value, self.date, self.valute_id])
+            db.commit()
+        except sqlite3.IntegrityError:
+            pass
+        finally:
+            cursor.close()
 
     @staticmethod
     def get(date, valute_id):
@@ -259,8 +201,25 @@ class ValutePrice:
 
         return data
 
+    @staticmethod
+    def existing_dates():
+        sql = ''' SELECT DISTINCT date FROM valute_price '''
+        db = SQLiteDB.connection
+        cursor = db.cursor()
+
+        cursor.execute(sql)
+        db.commit()
+        data = cursor.fetchall()
+        cursor.close()
+
+        return data
+
 
 class ValuteByDay:
+    '''
+    Информация о валюте и её данные за день.
+    '''
+
     def __init__(self, valute: Valute, valute_data: ValutePrice):
         self.entity = valute
         self.data = valute_data
@@ -273,9 +232,15 @@ class Scrapper:
 
 
 class CbrScrapper(Scrapper):
+    '''
+    Парсер валют сайта ЦБ
+    '''
     url = 'http://www.cbr.ru/scripts/XML_daily.asp?date_req={}'
 
-    def __init__(self, date):
+    def __init__(self, date: str):
+        '''
+        :param date: Дата за которую нужны данные.
+        '''
         self.date = date
         self.current_url = self.__format_url(date)
 
@@ -284,6 +249,11 @@ class CbrScrapper(Scrapper):
         return cls.url.format(date)
 
     def __parse_xml(self, cbr_xml):
+        '''
+        Преобразование XML в объекты, с которыми можно взаимодействовать.
+        :param cbr_xml:
+        :return:
+        '''
         data = []
         dom = xml.dom.minidom.parse(cbr_xml)
         dom.normalize()

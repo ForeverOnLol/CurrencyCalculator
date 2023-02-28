@@ -1,8 +1,10 @@
 import datetime
+import sqlite3
 
 import pytest
 from freezegun import freeze_time
-from structures import SQLiteDB, RequiredDate, Valute, CbrScrapper, ValutePrice
+from structures import SQLiteDB, Valute, CbrScrapper, ValutePrice
+from common.required_date import RequiredDate
 
 
 @pytest.fixture
@@ -45,9 +47,11 @@ class TestValutePrice:
         valute = Valute(id=value_id, num_code=222, char_code='2323', name='Aidro', nominal=222).create()
         ValutePrice(value='27.2', date='27/04/2022', valute_id=value_id).create()
 
-        value_id = '123sd'
-        valute = Valute(id=value_id, num_code=222, char_code='2323', name='Aidro', nominal=222).create()
-        ValutePrice(value='27.2', date='27/04/2022', valute_id=value_id).create()
+        with pytest.raises(sqlite3.IntegrityError):
+            value_id = '123sd'
+            valute = Valute(id=value_id, num_code=222, char_code='2323', name='Aidro', nominal=222).create()
+            ValutePrice(value='27.2', date='27/04/2022', valute_id=value_id).create()
+
 
     def test_get(self, run_db):
         date = '27/04/2022'
