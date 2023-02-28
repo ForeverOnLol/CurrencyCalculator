@@ -67,27 +67,27 @@ class TestRequiredDate:
     @freeze_time('2023-02-17')
     def test_last_weeks(self):
         result = RequiredDate.last_weeks()
-        assert result[-1] == datetime.date(2023, 2, 17)
-        assert result[0] == datetime.date(2023, 1, 23)
+        assert result[-1] == '17/02/2023'
+        assert result[0] == '23/01/2023'
 
     @freeze_time('2023-02-17')
     def test_last_months(self):
         result = RequiredDate.last_months()
-        assert result[-1] == datetime.date(2023, 2, 17)
-        assert result[-11] == datetime.date(2023, 2, 7)
-        assert result[0] == datetime.date(2022, 11, 1)
+        assert result[-1] == '17/02/2023'
+        assert result[-11] == '07/02/2023'
+        assert result[0] == '01/11/2022'
 
     @freeze_time('2023-02-17')
     def test_last_quarts(self):
         result = RequiredDate.last_quarts()
-        assert result[0] == datetime.date(2022, 4, 1)
-        assert result[-1] == datetime.date(2023, 2, 15)
+        assert result[0] == '01/04/2022'
+        assert result[-1] == '15/02/2023'
 
     @freeze_time('2023-02-17')
     def test_last_years(self):
         result = RequiredDate.last_years()
-        assert result[0] == datetime.date(2020, 1, 1)
-        assert result[-1] == datetime.date(2023, 2, 15)
+        assert result[0] == '01/01/2020'
+        assert result[-1] == '15/02/2023'
 
     @freeze_time('2023-02-17')
     def test_last_years(self):

@@ -11,5 +11,6 @@ create table valute_price(
     value float,
     date date,
     valute_id varchar(255),
-    FOREIGN KEY(valute_id) REFERENCES valute(id)
+    FOREIGN KEY(valute_id) REFERENCES valute(id),
+    UNIQUE (date, valute_id)
 );
