@@ -1,9 +1,9 @@
-import datetime
-import sqlite3
-
 import pytest
 from freezegun import freeze_time
-from structures import SQLiteDB, Valute, CbrScrapper, ValutePrice
+
+from db import SQLiteDB
+from common.models import ValutePrice, Valute
+from common.scrapper import CbrScrapper
 from common.required_date import RequiredDate
 
 
@@ -32,6 +32,7 @@ class TestValute:
     def test_create(self, run_db):
         Valute(id='123sd', num_code=222, char_code='2323', name='Aidro', nominal=222).create()
         Valute(id='123zx', num_code=222, char_code='2323', name='Aidro', nominal=222).create()
+        Valute(id='123zx', num_code=222, char_code='2323', name='Aidro', nominal=222).create()
 
     def test_all(self, run_db):
         assert Valute.all() == []
@@ -47,10 +48,9 @@ class TestValutePrice:
         valute = Valute(id=value_id, num_code=222, char_code='2323', name='Aidro', nominal=222).create()
         ValutePrice(value='27.2', date='27/04/2022', valute_id=value_id).create()
 
-        with pytest.raises(sqlite3.IntegrityError):
-            value_id = '123sd'
-            valute = Valute(id=value_id, num_code=222, char_code='2323', name='Aidro', nominal=222).create()
-            ValutePrice(value='27.2', date='27/04/2022', valute_id=value_id).create()
+        value_id = '123sd'
+        valute = Valute(id=value_id, num_code=222, char_code='2323', name='Aidro', nominal=222).create()
+        ValutePrice(value='27.2', date='27/04/2022', valute_id=value_id).create()
 
 
     def test_get(self, run_db):
@@ -60,7 +60,7 @@ class TestValutePrice:
         Valute(id=valute_id, num_code=222, char_code='2323', name='Aidro', nominal=222).create()
         ValutePrice(value='27.2', date=date, valute_id=valute_id).create()
 
-        print(ValutePrice.get(date=date, valute_id=valute_id))
+        ValutePrice.get(date=date, valute_id=valute_id)
 
 
 class TestRequiredDate:

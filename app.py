@@ -1,4 +1,6 @@
-from structures import SQLiteDB, ValuteManager
+from gui.interface import DesktopUI
+from structures import ValuteManager
+from db import SQLiteDB
 
 
 class App():
@@ -10,6 +12,7 @@ class App():
         db = SQLiteDB()
         db.run()
         ValuteManager.load_data_in_db()
+        DesktopUI()
 
 
 if __name__ == '__main__':

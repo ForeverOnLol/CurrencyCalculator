@@ -1,6 +1,9 @@
 from datetime import *
 from tkinter import *
+from tkinter import ttk
 from tkinter.ttk import Notebook, Frame, Combobox
+
+
 from module_functions import *
 from module_structures import *
 from module_parse import *

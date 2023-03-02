@@ -51,7 +51,7 @@ class RequiredDate:
         return list(map(f, date_list))
 
     @classmethod
-    def last_weeks(cls) -> list[datetime.date]:
+    def last_weeks(cls) -> list[str]:
         '''
         Все дни последних четырёх недель.
         :return: Список с датами в формате %Y/%m/%d
@@ -62,7 +62,7 @@ class RequiredDate:
         return cls.__conv_to_str(date_list=date_list)
 
     @classmethod
-    def last_months(cls) -> list[datetime.date]:
+    def last_months(cls) -> list[str]:
         '''
         Все дни последних четырёх месяцев.
         :return: Список с датами в формате %Y/%m/%d.
@@ -73,9 +73,9 @@ class RequiredDate:
         return cls.__conv_to_str(date_list=date_list)
 
     @classmethod
-    def last_quarts(cls) -> list[datetime.date]:
+    def last_quarts(cls) -> list[str]:
         '''
-        1 и 15 день каждого месяца последних четырёх кварталов .
+        1 и 15 день каждого месяца последних четырёх кварталов.
         :return: Список с датами в формате %Y/%m/%d.
         '''
         today = datetime.datetime.now().date()
@@ -87,7 +87,7 @@ class RequiredDate:
         return cls.__conv_to_str(date_list=date_list)
 
     @classmethod
-    def last_years(cls) -> list[datetime.date]:
+    def last_years(cls) -> list[str]:
         '''
         1 и 15 день каждого месяца последних четырёх лет.
         :return: Список с датами в формате %Y/%m/%d.
