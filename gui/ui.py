@@ -108,7 +108,8 @@ class StatisticsTab(Tab):
     def load_content(self):
         # Левая колонка
         Label(self.frame, text='Валюта').place(x=80, y=10)
-        self.combobox1 = Combobox(self.frame, width=20, values=self.controller.names(with_rub=False), font=('Georgia 12'))
+        self.combobox1 = Combobox(self.frame, width=20, values=self.controller.names(with_rub=False),
+                                  font=('Georgia 12'))
         self.combobox1.current(0)
         self.combobox1.place(x=10, y=40)
         self.btn = Button(self.frame, width=20, text="Построить график", font=('Georgia 12'), command=self.btn_action)
@@ -167,7 +168,6 @@ class StatisticsTab(Tab):
         plt.plot(coords_x, prices, 'g')
         plt.grid()
         plt.xticks(coords_x, dates)
-
 
     def create_plot(self):
         matplotlib.use('TkAgg')
