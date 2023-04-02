@@ -16,7 +16,7 @@ def ticks_format(dates: list, period_name: str):
         case 'год':
             res = []
             for i, date in enumerate(dates):
-                year = date[5:]
+                year = date[6:]
                 day = date[0:2]
                 if (day == '01' or day == '15'):
                     if (day == '01'):
