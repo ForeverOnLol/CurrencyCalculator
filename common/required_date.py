@@ -4,7 +4,8 @@ from typing import Union
 from datequarter import DateQuarter
 from dateutil.relativedelta import relativedelta
 
-def num_month_to_name(num: int, short: bool=False) -> str:
+
+def num_month_to_name(num: int, short: bool = False) -> str:
     '''
     Преобразование номера месяца в название на русском
     :param num: номер месяца
@@ -28,20 +29,21 @@ def num_month_to_name(num: int, short: bool=False) -> str:
         }
     else:
         d = {
-                1: 'Январь',
-                2: 'Февраль',
-                3: 'Март',
-                4: 'Апрель',
-                5: 'Май',
-                6: 'Июнь',
-                7: 'Июль',
-                8: 'Август',
-                9: 'Сентябрь',
-                10: 'Октябрь',
-                11: 'Ноябрь',
-                12: 'Декабрь'
-            }
+            1: 'Январь',
+            2: 'Февраль',
+            3: 'Март',
+            4: 'Апрель',
+            5: 'Май',
+            6: 'Июнь',
+            7: 'Июль',
+            8: 'Август',
+            9: 'Сентябрь',
+            10: 'Октябрь',
+            11: 'Ноябрь',
+            12: 'Декабрь'
+        }
     return d[num]
+
 
 class RequiredDate:
     '''
@@ -236,7 +238,8 @@ class RequiredDate:
         :return: Список с датами в формате %Y/%m/%d.
         '''
         result = []
-        for date in cls.last_weeks() + cls.last_months() + cls.last_quarts() + cls.last_years():
+        for date in cls.last_weeks(original=False) + cls.last_months(original=False) + cls.last_quarts(
+                original=False) + cls.last_years(original=False):
             if date not in result:
                 result.append(date)
         return result
