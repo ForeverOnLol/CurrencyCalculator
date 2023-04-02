@@ -176,7 +176,6 @@ class StatisticsTab(Tab):
         self.canvas = matplotlib.backends.backend_tkagg.FigureCanvasTkAgg(fig, master=self.frame)
         plot_widget = self.canvas.get_tk_widget()
         plot_widget.place(x=400, y=100)
-        plot_widget
         ax.set_xticklabels(ax.get_xticks(), rotation=25, fontsize=8)
 
 
