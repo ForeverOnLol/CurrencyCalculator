@@ -1,9 +1,7 @@
-import sys
-
 from common.orm import ValutePrice, Valute, ValuteByDay
 from common.required_date import RequiredDate
 from common.scrapper import CbrScrapper
-
+import common.console as sys
 
 class ValuteManager:
     '''
@@ -59,9 +57,9 @@ class ValuteManager:
         for date in dates:
             valute_by_day_list = CbrScrapper(date=date).get()
             for valute in valute_by_day_list:
-                sys.stdout.write('\033[2K\033[1G')
+                sys.clear_line()
                 print(f'\rПодгрузка валюты {valute.entity.name} за {date}', end='')
                 valute.entity.create()
                 valute.data.create()
-        sys.stdout.write('\033[2K\033[1G')
+        sys.clear_line()
         print('Все данные подгружены', end='\n')

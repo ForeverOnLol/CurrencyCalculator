@@ -223,7 +223,7 @@ class GUI:
     def start(self, controller):
         self.root = Tk()
         self.root.tk.call('source', f'{os.path.dirname(os.path.realpath(__file__))}/forest-light.tcl')
-
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         ttk.Style().theme_use('forest-light')
 
         self.root.configure(bg="#FFFFFF")
@@ -231,6 +231,9 @@ class GUI:
         self.root.title("Конвертер валют")
         self.tabs = TabLoader(self.root, controller)
         self.root.mainloop()
+
+    def on_closing(self):
+        self.root.destroy()
 
 
 def run_desktop():
