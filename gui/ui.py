@@ -233,7 +233,7 @@ class GUI:
         self.root.mainloop()
 
     def on_closing(self):
-        self.root.destroy()
+        self.root.quit()
 
 
 def run_desktop():
