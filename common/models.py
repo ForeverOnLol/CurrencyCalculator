@@ -1,124 +1,105 @@
-import sqlite3
-from db import SQLiteDB
+from enum import Enum
+from typing import Optional
+
+from common.orm import Valute, ValuteByDay
+from common.required_date import RequiredDate
 
 
-class Valute:
-    def __init__(self, id, num_code, char_code, name, nominal):
-        self.id = str(id)
-        self.num_code = int(num_code)
-        self.char_code = str(char_code)
-        self.name = str(name)
-        self.nominal = int(nominal)
-
-    def __is_exist(self, valute_id):
-        sql = ' SELECT valute.id FROM valute WHERE valute.id={} '.format(valute_id)
-
-        db = SQLiteDB.connection
-        cursor = db.cursor()
-
-        cursor.execute(sql)
-        db.commit()
-        cursor.close()
-
-    def create(self):
-        sql = ''' INSERT INTO valute(id, num_code, char_code, nominal, name)
-                  VALUES(?, ?,?,?,?) '''
-        db = SQLiteDB.connection
-        cursor = db.cursor()
-        try:
-            cursor.execute(sql, [self.id, self.num_code, self.char_code, self.nominal, self.name])
-            db.commit()
-        except sqlite3.IntegrityError:
-            print(f'Попытка добавить валюту, которая уже существует', (self.name,))
-        finally:
-            cursor.close()
+class ValuteConv():
+    @staticmethod
+    def __conv_to_rub(valute_name, count) -> float:
+        '''
+        Конвертация в российский рубль
+        :param valute_name:
+        :return:
+        '''
+        if valute_name == 'Российский рубль':
+            return count
+        today = RequiredDate.today()
+        valute = ValuteByDay.get(name=valute_name, date=today)
+        price = valute.data.value
+        nominal = valute.entity.nominal
+        return float(count) * float(price) * float(1) / (
+                float(1) * float(nominal))
 
     @staticmethod
-    def all():
-        sql = ''' SELECT * FROM valute '''
-
-        db = SQLiteDB.connection
-        cursor = db.cursor()
-
-        cursor.execute(sql)
-        db.commit()
-        data = cursor.fetchall()
-        cursor.close()
-        return data
-
-    @staticmethod
-    def is_exist_any():
-        sql = ''' SELECT * FROM valute '''
-
-        db = SQLiteDB.connection
-        cursor = db.cursor()
-
-        cursor.execute(sql)
-        db.commit()
-        data = cursor.fetchall()
-        cursor.close()
-        return data
-
-
-class ValutePrice:
-    '''
-    Стоимость валюты за определённую дату
-    '''
-
-    def __init__(self, value, date, valute_id):
-        self.value = float(value)
-        self.date = str(date)
-        self.valute_id = valute_id
-
-    def __is_exist(self, valute_id: str):
-        pass
-
-    def create(self):
-        sql = ''' INSERT INTO valute_price(value, date, valute_id)
-                  VALUES(?, ?, ?) '''
-        db = SQLiteDB.connection
-        cursor = db.cursor()
-        try:
-            cursor.execute(sql, [self.value, self.date, self.valute_id])
-            db.commit()
-        except sqlite3.IntegrityError:
-            print(f'Попытка добавить данные по валюте, которые уже существуют: ',
-                  (self.value, self.date, self.valute_id))
-        finally:
-            cursor.close()
+    def __conv_from_rub(valute_name, count) -> float:
+        '''
+        Конвертация из российского рубля
+        :param valute_name:
+        :return:
+        '''
+        if valute_name == 'Российский рубль':
+            return count
+        today = RequiredDate.today()
+        valute = ValuteByDay.get(name=valute_name, date=today)
+        price = valute.data.value
+        nominal = valute.entity.nominal
+        return float(count) * float(1) * float(nominal) / (
+                float(price) * float(1))
 
     @staticmethod
-    def get(date, valute_id):
-        sql = ''' SELECT * FROM valute_price WHERE date=? AND valute_id=? '''
-        db = SQLiteDB.connection
-        cursor = db.cursor()
+    def today(valute_first: str, valute_second: str, count) -> float:
+        '''
+        Конвертация одной валюты в другую по курсу текущего дня
+        :param valute_first: название первой валюты на русском.
+        :param valute_second: название второй валюты на русском.
+        :param count: число, которое необходимо конвертировать
+        :return:
+        '''
+        if valute_first == 'Российский рубль':
+            return ValuteConv.__conv_from_rub(valute_name=valute_second, count=count)
+        if valute_second == 'Российский рубль':
+            return ValuteConv.__conv_to_rub(valute_name=valute_first, count=count)
 
-        cursor.execute(sql, (date, valute_id))
-        db.commit()
-        data = cursor.fetchall()
-        cursor.close()
+        today = RequiredDate.today()
+        first_v = ValuteByDay.get(name=valute_first, date=today)
+        second_v = ValuteByDay.get(name=valute_second, date=today)
+        first_v_price = first_v.data.value
+        second_v_price = second_v.data.value
+        first_v_nominal = first_v.entity.nominal
+        second_v_nominal = second_v.entity.nominal
 
-        return data
+        result = float(count) * float(first_v_price) * float(second_v_nominal) / (
+                float(second_v_price) * float(first_v_nominal))
+        return result
 
     @staticmethod
-    def existing_dates():
-        sql = ''' SELECT DISTINCT date FROM valute_price '''
-        db = SQLiteDB.connection
-        cursor = db.cursor()
+    def names(with_rub=True) -> list:
+        '''
+        Выводит список названий валют текущего дня.
+        :return:
+        '''
+        today = RequiredDate.today()
+        valute_by_day_list = ValuteByDay.all(today)
+        res = []
+        if with_rub:
+            res.append('Российский рубль')
 
-        cursor.execute(sql)
-        db.commit()
-        data = cursor.fetchall()
-        cursor.close()
-
-        return data
+        for i in valute_by_day_list:
+            res.append(i.entity.name)
+        return res
 
 
-class ValuteByDay:
-    '''
-    Информация о валюте и её данные за день.
-    '''
+class ValuteAnalize():
+    @staticmethod
+    def period(period_name: str) -> dict:
+        period_name = period_name.lower()
+        match period_name:
+            case 'неделя':
+                return RequiredDate.last_weeks_detail()
+            case 'месяц':
+                return RequiredDate.last_months_detail()
+            case 'квартал':
+                return RequiredDate.last_quarts_detail()
+            case 'год':
+                return RequiredDate.last_year_detail()
 
-    def __init__(self, valute: Valute, valute_data: ValutePrice):
-        self.entity = valute
-        self.data = valute_data
+    @staticmethod
+    def valute_prices(date_list: list, valute_name) -> list:
+        values = []
+
+        for date in date_list:
+            valute_price = ValuteByDay.get(name=valute_name, date=date).data.value
+            values.append(valute_price)
+        return values

@@ -1,8 +1,47 @@
-
 import datetime
+from typing import Union
+
 from datequarter import DateQuarter
 from dateutil.relativedelta import relativedelta
 
+def num_month_to_name(num: int, short: bool=False) -> str:
+    '''
+    Преобразование номера месяца в название на русском
+    :param num: номер месяца
+    :param short: флаг, если надо короткое название месяца, например, январь - янв
+    :return:
+    '''
+    if short:
+        d = {
+            1: 'Янв',
+            2: 'Фев',
+            3: 'Мар',
+            4: 'Апр',
+            5: 'Май',
+            6: 'Июнь',
+            7: 'Июль',
+            8: 'Авг',
+            9: 'Сен',
+            10: 'Окт',
+            11: 'Нояб',
+            12: 'Дек'
+        }
+    else:
+        d = {
+                1: 'Январь',
+                2: 'Февраль',
+                3: 'Март',
+                4: 'Апрель',
+                5: 'Май',
+                6: 'Июнь',
+                7: 'Июль',
+                8: 'Август',
+                9: 'Сентябрь',
+                10: 'Октябрь',
+                11: 'Ноябрь',
+                12: 'Декабрь'
+            }
+    return d[num]
 
 class RequiredDate:
     '''
@@ -12,6 +51,10 @@ class RequiredDate:
     4) 1 и 15 день каждого месяца последних четырёх лет.
     :return: None
     '''
+
+    @staticmethod
+    def __date_to_str(date: datetime.date):
+        return date.strftime('%d/%m/%Y')
 
     @staticmethod
     def __count(start_dt: datetime.date, end_dt: datetime.date) -> list[datetime.date]:
@@ -47,35 +90,75 @@ class RequiredDate:
         :param date_list:
         :return:
         '''
-        f = lambda x: x.strftime('%d/%m/%Y')
+        f = lambda x: RequiredDate.__date_to_str(x)
         return list(map(f, date_list))
 
     @classmethod
-    def last_weeks(cls) -> list[str]:
+    def last_weeks(cls, original=False) -> list[Union[str, datetime.date]]:
         '''
         Все дни последних четырёх недель.
+        :param original: Возврат данных в формате datetime.date если True, или в формате строк если False
         :return: Список с датами в формате %Y/%m/%d
         '''
         today = datetime.datetime.now().date()
         start_date = today - relativedelta(days=today.weekday(), weeks=3)
         date_list = cls.__count(start_dt=start_date, end_dt=today)
+        if original:
+            return date_list
         return cls.__conv_to_str(date_list=date_list)
 
     @classmethod
-    def last_months(cls) -> list[str]:
+    def last_weeks_detail(cls) -> dict:
+        '''
+        Получение полной информации о днях последних 4 недель в расширенном формате.
+        :return: Словарь -> ключ - интервал недели прим. '13/02/2023 - 19/02/2023', значение - кортеж с датами данного
+         интервала
+        '''
+        dates = RequiredDate.last_weeks()
+        return {
+            f'{dates[0]} - {dates[6]}': [dates[i] for i in range(7)],
+            f'{dates[7]} - {dates[13]}': [dates[i] for i in range(7, 13)],
+            f'{dates[14]} - {dates[20]}': [dates[i] for i in range(13, 20)],
+            f'{dates[21]} - {dates[-1]}': [dates[i] for i in range(20, len(dates))]
+        }
+
+    @classmethod
+    def last_months(cls, original=False) -> list[Union[str, datetime.date]]:
         '''
         Все дни последних четырёх месяцев.
+        :param original: Возврат данных в формате datetime.date если True, или в формате строк если False.
         :return: Список с датами в формате %Y/%m/%d.
         '''
         today = datetime.datetime.now().date()
         start_date = today - relativedelta(days=today.day - 1, months=3)
         date_list = cls.__count(start_dt=start_date, end_dt=today)
+        if original:
+            return date_list
         return cls.__conv_to_str(date_list=date_list)
 
     @classmethod
-    def last_quarts(cls) -> list[str]:
+    def last_months_detail(cls) -> dict:
+        '''
+        Получение полной информации о днях последних 4 месяцах в расширенном формате.
+        :return: Словарь -> ключ - названия месяца и год прим. 'Январь 2023', значение - кортеж с датами данного меесяца.
+        '''
+        dates = RequiredDate.last_months(original=True)
+
+        res_d = {}
+
+        for d in dates:
+            month_year = f'{num_month_to_name(d.month)} {d.year}'
+            if month_year not in res_d:
+                res_d[month_year] = []
+            res_d[month_year].append(RequiredDate.__date_to_str(d))
+
+        return res_d
+
+    @classmethod
+    def last_quarts(cls, original=False) -> list[Union[str, datetime.date]]:
         '''
         1 и 15 день каждого месяца последних четырёх кварталов.
+        :param original: Возврат данных в формате datetime.date если True, или в формате строк если False.
         :return: Список с датами в формате %Y/%m/%d.
         '''
         today = datetime.datetime.now().date()
@@ -84,12 +167,39 @@ class RequiredDate:
 
         date_list = cls.__count(start_dt=start_date, end_dt=today)
         date_list = cls.__start_mid_format(date_list)
+        if original:
+            return date_list
         return cls.__conv_to_str(date_list=date_list)
 
     @classmethod
-    def last_years(cls) -> list[str]:
+    def last_quarts_detail(cls) -> dict:
+        '''
+        Получение полной информации о днях последних 4 кварталах в расширенном формате.
+        :return: Словарь -> ключ - названия квартала и год прим. '1 квартал 2021', значение - кортеж с датами данного квартала
+        '''
+        dates = RequiredDate.last_quarts(original=True)
+        num_quart_to_name = {
+            1: '1 квартал',
+            2: '2 квартал',
+            3: '3 квартал',
+            4: '4 квартал'
+        }
+
+        res_d = {}
+
+        for d in dates:
+            quart = f'{num_quart_to_name[DateQuarter.from_date(d).quarter()]} {d.year}'
+            if quart not in res_d:
+                res_d[quart] = []
+            res_d[quart].append(RequiredDate.__date_to_str(d))
+
+        return res_d
+
+    @classmethod
+    def last_years(cls, original=True) -> list[Union[str, datetime.date]]:
         '''
         1 и 15 день каждого месяца последних четырёх лет.
+        :param original: Возврат данных в формате datetime.date если True, или в формате строк если False
         :return: Список с датами в формате %Y/%m/%d.
         '''
         today = datetime.datetime.now().date()
@@ -97,7 +207,27 @@ class RequiredDate:
 
         dates_list = cls.__count(start_dt=start_date, end_dt=today)
         date_list = cls.__start_mid_format(dates_list)
+        if original:
+            return date_list
         return cls.__conv_to_str(date_list=date_list)
+
+    @classmethod
+    def last_year_detail(cls) -> dict:
+        '''
+        Получение полной информации о днях последних 4 годах в расширенном формате.
+        :return: Словарь -> ключ - год прим. '2021', значение - кортеж с датами данного года.
+        '''
+        dates = RequiredDate.last_years(original=True)
+
+        res_d = {}
+
+        for d in dates:
+            year = f'{d.year}'
+            if year not in res_d:
+                res_d[year] = []
+            res_d[year].append(RequiredDate.__date_to_str(d))
+
+        return res_d
 
     @classmethod
     def all(cls) -> list[str]:
@@ -110,3 +240,12 @@ class RequiredDate:
             if date not in result:
                 result.append(date)
         return result
+
+    @classmethod
+    def today(cls) -> str:
+        '''
+        Возвращает текущую дату.
+        :return: дата в формате %Y/%m/%d.
+        '''
+        today = [datetime.datetime.now().date()]
+        return cls.__conv_to_str(today)[0]

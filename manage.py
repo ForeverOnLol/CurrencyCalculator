@@ -1,4 +1,4 @@
-from common.models import ValutePrice, Valute
+from common.orm import ValutePrice, Valute, ValuteByDay
 from common.required_date import RequiredDate
 from common.scrapper import CbrScrapper
 
@@ -15,7 +15,7 @@ class ValuteManager:
         :return: None
         '''
 
-        valute_list = sorted(Valute.all())
+        valute_list = Valute.all()
 
         if not len(valute_list):
             cls.load_all()
@@ -53,7 +53,6 @@ class ValuteManager:
                     valute.data.create()
 
     @classmethod
-    def get_by_period(cls, period):
-        pass
-
-
+    def today(cls) -> list[ValuteByDay]:
+        date = RequiredDate.today()
+        return ValuteByDay.all(date=date)

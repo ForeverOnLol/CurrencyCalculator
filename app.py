@@ -1,5 +1,5 @@
-from gui.interface import DesktopUI
-from structures import ValuteManager
+from gui.ui import run_desktop
+from manage import ValuteManager
 from db import SQLiteDB
 
 
@@ -12,7 +12,7 @@ class App():
         db = SQLiteDB()
         db.run()
         ValuteManager.load_data_in_db()
-        DesktopUI()
+        run_desktop()
 
 
 if __name__ == '__main__':

@@ -3,7 +3,7 @@ create table valute(
     num_code integer,
     char_code varchar(255),
     nominal integer,
-    name varchar(255)
+    name varchar(255) UNIQUE
 );
 
 create table valute_price(

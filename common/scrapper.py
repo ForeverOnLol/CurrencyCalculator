@@ -1,7 +1,7 @@
 import urllib.request
 import xml.dom.minidom
 
-from common.models import ValuteByDay, ValutePrice, Valute
+from common.orm import ValuteByDay, ValutePrice, Valute
 
 
 class Scrapper:
@@ -41,7 +41,7 @@ class CbrScrapper(Scrapper):
         for node in node_array:
             childList = node.childNodes
             valute = Valute(
-                id=childList[3].childNodes[0].nodeValue,
+                id=node.getAttribute('ID'),
                 num_code=childList[0].childNodes[0].nodeValue,
                 char_code=childList[1].childNodes[0].nodeValue,
                 nominal=childList[2].childNodes[0].nodeValue,
@@ -50,7 +50,7 @@ class CbrScrapper(Scrapper):
             content = ValutePrice(
                 date=self.date,
                 value=str(childList[4].childNodes[0].nodeValue).replace(',', '.'),
-                valute_id=childList[3].childNodes[0].nodeValue
+                valute_id=node.getAttribute('ID')
             )
             data.append(ValuteByDay(valute, content))
         return data
@@ -66,3 +66,4 @@ class CbrScrapper(Scrapper):
         data = self.__parse_xml(xml)
 
         return data
+
