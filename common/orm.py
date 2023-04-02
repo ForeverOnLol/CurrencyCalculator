@@ -37,7 +37,8 @@ class Valute:
             cursor.execute(sql, [self.id, self.num_code, self.char_code, self.nominal, self.name])
             db.commit()
         except sqlite3.IntegrityError:
-            print(f'Попытка добавить валюту, которая уже существует', (self.name,))
+            # print(f'Попытка добавить валюту, которая уже существует', (self.name,))
+            pass
         finally:
             cursor.close()
 
@@ -111,8 +112,9 @@ class ValutePrice:
             cursor.execute(sql, [self.value, self.date, self.valute_id])
             db.commit()
         except sqlite3.IntegrityError:
-            print(f'Попытка добавить данные по валюте, которые уже существуют: ',
-                  (self.value, self.date, self.valute_id))
+            # print(f'Попытка добавить данные по валюте, которые уже существуют: ',
+            #       (self.value, self.date, self.valute_id))
+            pass
         finally:
             cursor.close()
 

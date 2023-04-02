@@ -28,6 +28,7 @@ class ValuteManager:
         Подгрузить все данные из ЦБ в БД.
         :return:
         '''
+        print('Подгрузка данных из ЦБ. Пожалуйста, подождите.')
         date_list = RequiredDate.all()
         for date in date_list:
             valute_by_day_list = CbrScrapper(date=date).get()
@@ -41,6 +42,7 @@ class ValuteManager:
         Подгрузка новых данных из ЦБ в БД.
         :return:
         '''
+        print('Подгрузка новых данных из ЦБ. Пожалуйста, подождите.')
         existing_dates = frozenset(ValutePrice.existing_dates())
         date_list = frozenset(RequiredDate.all())
         mismatched = date_list - existing_dates
