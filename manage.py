@@ -42,7 +42,7 @@ class ValuteManager:
                 print(f'\rПодгрузка валюты {valute.entity.name} за {date}', end='')
                 valute.entity.create()
                 valute.data.create()
-        print(end='\n')
+        print('Все данные подгружены', end='\n')
 
     @classmethod
     def load_fresh(cls) -> None:
@@ -65,7 +65,7 @@ class ValuteManager:
                     print(f'\rПодгрузка валюты {valute.entity.name} за {date}', end='')
                     valute.entity.create()
                     valute.data.create()
-        print(end='\n')
+        print('Все данные подгружены', end='\n')
 
     @classmethod
     def today(cls) -> list[ValuteByDay]:
