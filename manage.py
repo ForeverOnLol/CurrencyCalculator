@@ -28,13 +28,18 @@ class ValuteManager:
         Подгрузить все данные из ЦБ в БД.
         :return:
         '''
-        print('Подгрузка данных из ЦБ. Пожалуйста, подождите.')
+        print(
+            'Подгрузка всех необходимых данных из ЦБ. Пожалуйста, подождите. Если вы прервёте загрузку, то '
+            'приложение может работать некорректно.')
+
         date_list = RequiredDate.all()
         for date in date_list:
             valute_by_day_list = CbrScrapper(date=date).get()
             for valute in valute_by_day_list:
+                print(f'\rПодгрузка валюты {valute.entity.name} за {date}', end='')
                 valute.entity.create()
                 valute.data.create()
+        print(end='\n')
 
     @classmethod
     def load_fresh(cls) -> None:
@@ -42,7 +47,9 @@ class ValuteManager:
         Подгрузка новых данных из ЦБ в БД.
         :return:
         '''
-        print('Подгрузка новых данных из ЦБ. Пожалуйста, подождите.')
+        print(
+            'Подгрузка новых данных из ЦБ. Пожалуйста, подождите. Если вы прервёте загрузку, то '
+            'приложение может работать некорректно.')
         existing_dates = frozenset(ValutePrice.existing_dates())
         date_list = frozenset(RequiredDate.all())
         mismatched = date_list - existing_dates
@@ -51,8 +58,10 @@ class ValuteManager:
             for date in mismatched:
                 valute_by_day_list = CbrScrapper(date=date).get()
                 for valute in valute_by_day_list:
+                    print(f'\rПодгрузка валюты {valute.entity.name} за {date}', end='')
                     valute.entity.create()
                     valute.data.create()
+        print(end='\n')
 
     @classmethod
     def today(cls) -> list[ValuteByDay]:
