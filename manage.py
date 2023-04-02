@@ -1,3 +1,5 @@
+import sys
+
 from common.orm import ValutePrice, Valute, ValuteByDay
 from common.required_date import RequiredDate
 from common.scrapper import CbrScrapper
@@ -36,6 +38,7 @@ class ValuteManager:
         for date in date_list:
             valute_by_day_list = CbrScrapper(date=date).get()
             for valute in valute_by_day_list:
+                sys.stdout.write('\033[2K\033[1G')
                 print(f'\rПодгрузка валюты {valute.entity.name} за {date}', end='')
                 valute.entity.create()
                 valute.data.create()
@@ -58,6 +61,7 @@ class ValuteManager:
             for date in mismatched:
                 valute_by_day_list = CbrScrapper(date=date).get()
                 for valute in valute_by_day_list:
+                    sys.stdout.write('\033[2K\033[1G')
                     print(f'\rПодгрузка валюты {valute.entity.name} за {date}', end='')
                     valute.entity.create()
                     valute.data.create()
